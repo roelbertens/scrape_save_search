@@ -16,4 +16,4 @@ RUN mkdir output
 RUN pip install -r requirements.txt
 
 # Run scrapy command when the container launches > use CMD
-CMD scrapy crawl iens -o output/iens.json
+CMD scrapy crawl iens -a placename=amsterdam -o output/iens.json
