@@ -16,6 +16,12 @@ class IensSpider(scrapy.Spider):
         'https://www.iens.nl/restaurant+amersfoort'
     ]
 
+    # function to get review summary statistic for a specific label ("Eten", "Decor", ..., "< 7")
+    def get_review_stat(response, tag, review_summary_type, label):
+        # lookup tag with rating label in the text of the element, then look up following nodes and get text from them
+        return response.xpath('//' + tag + '[@class="reviewSummary-' + review_summary_type + '"][contains(text(),"' +
+                              label + '")]/following::*/text()').extract_first()
+
     # get info from restaurant page
     def parse_restaurant(self, response):
         yield {
