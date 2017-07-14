@@ -27,12 +27,8 @@ def get_review_stat(response, tag, review_summary_type, label):
 class IensSpider(scrapy.Spider):
     name = "iens"
 
-    # start with one url
-    start_urls = [
-        # 'https://www.iens.nl/restaurants-noord-holland/rt2128'
-        #'https://www.iens.nl/restaurant+arnhem'
-        'https://www.iens.nl/restaurant+amersfoort'
-        ]
+    def start_requests(self):
+        yield scrapy.Request('https://www.iens.nl/restaurant+%s' % self.placename)
 
 
     # get info from restaurant page
