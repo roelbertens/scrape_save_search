@@ -1,5 +1,11 @@
 Make a nice readme
 
+Scraper
+
+Use following code to call the spider named `iens`:
+```
+scrapy crawl iens -a placename=amsterdam -o iens.json
+```
 
 ---
 
@@ -16,7 +22,7 @@ In docker terminal:
     - RUN vs. CMD: RUN wordt uitgevoerd bij bouwen van de image. CMD bij het bouwen van de container
 * create container and bash into it to check if it was set up correctly: `docker run -it --rm --name iens_container iens_scraper bash`
     - check if folders are what you expect
-    - check if scraper works with: `scrapy crawl iens -o output/iens.json`
+    - check if scraper works with: `scrapy crawl iens -a placename=amsterdam -o output/iens.json`
 * real deal: `docker run --rm --name iens_container -v /c/Users/steve/Training/iens:/app/output iens_scraper`
     - volume mount moet in het aanroepen van het script, omdat het pad systeemafhankelijk is en dus niet van tevoren bekend is
     - volume mount naar een speciale folder waar de data wordt opgeslagen
