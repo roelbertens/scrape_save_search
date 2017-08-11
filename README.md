@@ -1,19 +1,26 @@
-Make a nice readme
+# Iens scraper
 
-Scraper
+The goal of this project is to learn how to run a Python Scrapy script from Docker on Google Cloud.
 
-Use below code to call the spider named `iens`. Add LOG_FILE argument to save scrapy log to file for error checking:
+
+### About Scrapy
+
+Use below code to call the spider named `iens`:
 ```
 scrapy crawl iens -a placename=amsterdam -o output/iens.json -s LOG_FILE=output/scrapy.log
 ```
+The following arguments can be set:
+* `-a placename` to choose the city name for the restaurants to be scraped. Argument is passed on to the spider class
+* `-o` for the location of the output file
+* `-s LOG_FILE` to save scrapy log to file for error checking
+* In `Settings.py` set `LOG_LEVEL = 'WARNING'` to only print error messages of warning or higher
 
----
 
-Docker
+### Docker
 
 Notes:
-* Docker is eigenlijk een overkill voor deze toepassing, maar wordt gebruikt om te leren omgaan met Docker.
-* Een simpele conda environment zou met een script scheduler zou goed genoeg zijn voor deze toepassing.
+* Docker is eigenlijk een overkill voor deze toepassing, maar wordt gebruikt om te leren omgaan met Docker
+* Een simpele conda environment zou met een script scheduler goed genoeg zijn voor deze toepassing
 
 In docker terminal:
 * navigate to project folder

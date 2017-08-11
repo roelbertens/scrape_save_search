@@ -21,6 +21,9 @@ NEWSPIDER_MODULE = 'iens_scraper.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
+# Set log level to at least WARNING
+LOG_LEVEL = 'WARNING'
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
