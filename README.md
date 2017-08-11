@@ -43,4 +43,21 @@ In docker terminal:
     - volume mount moet in het aanroepen van het script, omdat het pad systeemafhankelijk is en dus niet van tevoren bekend is
     - volume mount naar een speciale folder waar de data wordt opgeslagen
 
+### Google Cloud container registry
+
+Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
+push and pull to the Google Container Registry.
+
+To tag and push your image to the container registry do:
+```
+docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
+gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
+```
+You should now be able to see the image in the container registry.
+
+### Google BigQuery
+
+Finding my way on how to write data to bigquery from python > needs to be build into container
+
+
 
