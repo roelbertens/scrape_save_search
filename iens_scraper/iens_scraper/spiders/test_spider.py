@@ -2,7 +2,7 @@ import scrapy
 import re
 
 class QuotesSpider(scrapy.Spider):
-    name = "iens"
+    name = "iens_test"
     start_urls = ['https://www.iens.nl/restaurants-noord-holland/rt2128'
     ]
 

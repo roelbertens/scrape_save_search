@@ -4,4 +4,4 @@
 # save date in specific format
 dt=$(date +%Y%m%d)
 # run crawler
-scrapy crawl iens -a placename=amsterdam -o output/iens_${dt}.json -s LOG_FILE=output/iens_${dt}.log
+scrapy crawl iens -a placename=amsterdam -o dockeroutput/iens_${dt}.json -s LOG_FILE=dockeroutput/iens_${dt}.log
