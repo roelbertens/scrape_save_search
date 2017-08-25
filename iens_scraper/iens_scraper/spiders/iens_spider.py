@@ -88,19 +88,19 @@ class IensSpider(scrapy.Spider):
                 # annoying cases wherein there is no distinction lead to error for .strip() - 'or' is ugly fix
                 'distinction': (response.xpath('//div[@class="reviewSummary-distinction"]/text()').
                                 extract_first() or '').strip(),
-                'rating-total': parse_digit(response.xpath('descendant::*[@class="rating-ratingValue"]/text()').extract_first()),
-                'nr-reviews': nr_reviews,
-                'nr-10ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '10')),
-                'nr-9ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '9')),
-                'nr-8ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '8')),
-                'nr-7ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '7')),
-                'nr-7-ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '< 7')),
+                'rating_total': parse_digit(response.xpath('descendant::*[@class="rating-ratingValue"]/text()').extract_first()),
+                'nr_reviews': nr_reviews,
+                'nr_10ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '10')),
+                'nr_9ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '9')),
+                'nr_8ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '8')),
+                'nr_7ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '7')),
+                'nr_7min_ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '< 7')),
 
-                'rating-eten': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Eten')),
-                'rating-service': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Service')),
-                'rating-decor': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Decor')),
+                'rating_eten': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Eten')),
+                'rating_service': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Service')),
+                'rating_decor': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Decor')),
 
-                'prijs-kwaliteit': get_review_stat(response, 'div', 'reviewStatLabel', 'Prijs-kwaliteit'),
+                'prijs_kwaliteit': get_review_stat(response, 'div', 'reviewStatLabel', 'Prijs-kwaliteit'),
                 'geluidsniveau': get_review_stat(response, 'div', 'reviewStatLabel', 'Geluidsniveau'),
                 'wachttijd': get_review_stat(response, 'div', 'reviewStatLabel', 'Wachttijd')
             }
