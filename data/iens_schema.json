@@ -1,0 +1,115 @@
+[
+  {
+    "name": "info",
+    "type": "record",
+    "fields": [
+      {
+        "name": "avg_price",
+        "type": "integer"
+      },
+      {
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "name": "house_number",
+        "type": "string"
+      },
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "lat",
+        "type": "float"
+      },
+      {
+        "name": "lon",
+        "type": "float"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "postal_code",
+        "type": "string"
+      },
+      {
+        "name": "street",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "reviews",
+    "type": "record",
+    "fields": [
+      {
+        "name": "distinction",
+        "type": "string"
+      },
+      {
+        "name": "geluidsniveau",
+        "type": "string"
+      },
+      {
+        "name": "nr_10ratings",
+        "type": "integer"
+      },
+      {
+        "name": "nr_7min_ratings",
+        "type": "integer"
+      },
+      {
+        "name": "nr_7ratings",
+        "type": "integer"
+      },
+      {
+        "name": "nr_8ratings",
+        "type": "integer"
+      },
+      {
+        "name": "nr_9ratings",
+        "type": "integer"
+      },
+      {
+        "name": "nr_reviews",
+        "type": "integer"
+      },
+      {
+        "name": "prijs_kwaliteit",
+        "type": "string"
+      },
+      {
+        "name": "rating_decor",
+        "type": "float"
+      },
+      {
+        "name": "rating_eten",
+        "type": "float"
+      },
+      {
+        "name": "rating_service",
+        "type": "float"
+      },
+      {
+        "name": "rating_total",
+        "type": "float"
+      },
+      {
+        "name": "wachttijd",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "tags",
+    "type": "string",
+    "mode": "repeated"
+  }
+]

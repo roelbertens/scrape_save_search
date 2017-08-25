@@ -55,9 +55,31 @@ gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
 ```
 You should now be able to see the image in the container registry.
 
+### Google storage options
+
+Based on the following [decision tree](https://cloud.google.com/storage-options/) Google recommends us to use BigQuery.
+
+However, we need to be sure that BigQuery [supports](https://cloud.google.com/bigquery/data-formats) the JSON format the
+data is in after scraping. That seems to be possible with nested JSON (which is the case here), so let's give it a try.
+
 ### Google BigQuery
 
-Finding my way on how to write data to bigquery from python > needs to be build into container
+
+Follow quickstart command line [tutorial](https://cloud.google.com/bigquery/quickstart-command-line) to get up to speed 
+on how to query BigQuery. For example use `bq ls` to list all data sets within your default project. 
+
+To [upload a nested json](https://cloud.google.com/bigquery/loading-data#loading_nested_and_repeated_json_data) you need
+a schema of the json file. A simple online editor could be used for the basis (for example [jsonschema.net]()), but we 
+needed to do some manual editing on top of that to get it into the schema required by BigQuery. Also, it turns out that 
+BigQuery doesn't like our JSON as a list, so you will have to unlist the JSON and just print one record of JSON per row.
+Check out the schema and sample data in the `data` folder. To upload the table do:
+
+```
+bq load --source_format=NEWLINE_DELIMITED_JSON --schema=iens_schema.json iens.iens_sample iens_sample.json
+```
 
 
+### To do
 
+* Ensure that the output of the scraper complies with the BigQuery format: should not be a list
+* Finding my way on how to write data to bigquery from python > needs to be build into container
