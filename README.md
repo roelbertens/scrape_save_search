@@ -47,6 +47,8 @@ In docker terminal:
 * create container and bash into it to check if it was set up correctly: `docker run -it --rm --name iens_container iens_scraper bash`
     - check if folders are what you expect
     - check if scraper works with: `scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines`
+    - Be sure to uncomment `ENTRYPOINT ["./entrypoint.sh"]` in the Dockerfile as otherwise this will run before you can 
+    bash into the container
 * real deal to run on Mac: `docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper`
     - volume mount moet in het aanroepen van het script, omdat het pad systeemafhankelijk is en dus niet van tevoren bekend is
     - volume mount naar een speciale folder waar de data wordt opgeslagen
