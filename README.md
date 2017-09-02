@@ -5,17 +5,25 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 ### To-do
 
 * Remove bugs in parsing some restaurants with really sparse address information. See errors in `output/scrapy_errors_20170811`
+* Finding my way on how to write data to bigquery from python > needs to be build into container
 
+### Folder structure
+
+* In the main project folder we have all setup files (like Dockerfile, entrypoint.sh and requirements.txt)
+* In the directory `data` there are some sample data sets, and the json schema required to upload to Google BigQuery
+* The directory `iens_scraper` contains:
+    * the `spider` folder set up by Scrapy with the crawler in `iens_spider.py`
+    * Other required code (nothing necessary yet)
 
 ### About Scrapy
 
 Use below code to call the spider named `iens`:
 ```
-scrapy crawl iens -a placename=amsterdam -o output/iens.json -s LOG_FILE=output/scrapy.log
+scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
 ```
 The following arguments can be set:
 * `-a placename` to choose the city name for the restaurants to be scraped. Argument is passed on to the spider class
-* `-o` for the location of the output file
+* `-o` for the location of the output file. Use file extention `.jsonlines` instead of `.json` for input Google BigQuery
 * `-s LOG_FILE` to save scrapy log to file for error checking
 * In `Settings.py` set `LOG_LEVEL = 'WARNING'` to only print error messages of warning or higher
 
@@ -38,7 +46,7 @@ In docker terminal:
     - Make sure to set the permissions of `entrypoint.sh` to executable with `chmod`
 * create container and bash into it to check if it was set up correctly: `docker run -it --rm --name iens_container iens_scraper bash`
     - check if folders are what you expect
-    - check if scraper works with: `scrapy crawl iens -a placename=amsterdam -o output/iens.json`
+    - check if scraper works with: `scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines`
 * real deal to run on Mac: `docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper`
     - volume mount moet in het aanroepen van het script, omdat het pad systeemafhankelijk is en dus niet van tevoren bekend is
     - volume mount naar een speciale folder waar de data wordt opgeslagen
@@ -71,15 +79,9 @@ on how to query BigQuery. For example use `bq ls` to list all data sets within y
 To [upload a nested json](https://cloud.google.com/bigquery/loading-data#loading_nested_and_repeated_json_data) you need
 a schema of the json file. A simple online editor could be used for the basis (for example [jsonschema.net]()), but we 
 needed to do some manual editing on top of that to get it into the schema required by BigQuery. Also, it turns out that 
-BigQuery doesn't like our JSON as a list, so you will have to unlist the JSON and just print one record of JSON per row.
+BigQuery doesn't like JSON as a list, so make sure you use `.jsonlines` as output file extension from your sraper. 
 Check out the schema and sample data in the `data` folder. To upload the table do:
 
 ```
-bq load --source_format=NEWLINE_DELIMITED_JSON --schema=iens_schema.json iens.iens_sample iens_sample.json
+bq load --source_format=NEWLINE_DELIMITED_JSON --schema=iens_schema.json iens.iens_sample iens_sample.jsonlines
 ```
-
-
-### To do
-
-* Ensure that the output of the scraper complies with the BigQuery format: should not be a list
-* Finding my way on how to write data to bigquery from python > needs to be build into container
