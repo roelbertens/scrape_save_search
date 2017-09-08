@@ -1,5 +1,5 @@
-# in terminal call as follows to save results in json file:
-# $ scrapy crawl iens -o iens.json
+# in terminal call as follows to save results in jsonlines file:
+# $ scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
 
 import scrapy
 import re
@@ -15,7 +15,6 @@ def parse_digit(text):
             return int(text)
     else:
         return -1
-
 
  # function to get review summary statistic for a specific label ("Eten", "Decor", ..., "< 7")
 def get_review_stat(response, tag, review_summary_type, label):
@@ -62,7 +61,6 @@ class IensSpider(scrapy.Spider):
             postal_code = address[2]
             city = address[3]
             country = address[4]
-
 
         yield {
             # restaurant info data

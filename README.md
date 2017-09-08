@@ -62,6 +62,15 @@ mount within the script as the path is system-dependent and thus isn't known in 
 Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
 push and pull to the Google Container Registry.
 
+To download your credentials go to [link](https://cloud.google.com/docs/authentication/getting-started) 
+and add the following to your .bash_profile
+
+```
+# google cloud service key
+export GOOGLE_APPLICATION_CREDENTIALS='/Users/${USER_NAME}/google-cloud-sdk/GDD Friday-27779724b509.json'
+```
+
+
 To tag and push your image to the container registry do:
 ```
 docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
@@ -89,7 +98,7 @@ BigQuery doesn't like JSON as a list, so make sure you use `.jsonlines` as outpu
 Check out the schema and sample data in the `data` folder. To upload the table do:
 
 ```
-bq load --source_format=NEWLINE_DELIMITED_JSON --schema=iens_schema.json iens.iens_sample iens_sample.jsonlines
+bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_schema.json iens.iens_sample data/iens_sample.jsonlines
 ```
 
 After uploading, the data can now be queried from the command line. For example, for the `data/iens_sample` table, the 
