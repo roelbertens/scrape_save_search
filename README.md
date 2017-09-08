@@ -34,7 +34,7 @@ Notes:
 * Docker is eigenlijk een overkill voor deze toepassing, maar wordt gebruikt om te leren omgaan met Docker
 * Een simpele conda environment zou met een script scheduler goed genoeg zijn voor deze toepassing
 
-In docker terminal:
+To set-up the container:
 * navigate to project folder
 * build image with: `docker build -t iens_scraper .`
     - note: image won't build with 3.6.1-slim base image. Misses certain packages to set up Scrapy
@@ -49,9 +49,13 @@ In docker terminal:
     - check if scraper works with: `scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines`
     - Be sure to uncomment `ENTRYPOINT ["./entrypoint.sh"]` in the Dockerfile as otherwise this will run before you can 
     bash into the container
-* real deal to run on Mac: `docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper`
-    - volume mount moet in het aanroepen van het script, omdat het pad systeemafhankelijk is en dus niet van tevoren bekend is
-    - volume mount naar een speciale folder waar de data wordt opgeslagen
+
+To spin up a container named `iens_container` after you have created the image `iens_scraper` do:
+```
+docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper
+```
+Within this command `-v` does a volume mount to a local folder to store the data. Note that we don't call the volume
+mount within the script as the path is system-dependent and thus isn't known in advance.
 
 ### Google Cloud container registry
 
@@ -87,3 +91,13 @@ Check out the schema and sample data in the `data` folder. To upload the table d
 ```
 bq load --source_format=NEWLINE_DELIMITED_JSON --schema=iens_schema.json iens.iens_sample iens_sample.jsonlines
 ```
+
+After uploading, the data can now be queried from the command line. For example, for the `data/iens_sample` table, the 
+following query will return all restaurant names with a `Romantisch` tag:
+
+```
+bq query "SELECT info.name FROM iens.iens_sample WHERE tags CONTAINS 'Romantisch'"
+```  
+
+To clean up and avoid charges to your account, remove all tables within the `iens` dataset with `bq rm -r iens`.
+
