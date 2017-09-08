@@ -12,7 +12,9 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 * In the main project folder we have all setup files (like Dockerfile, entrypoint.sh and requirements.txt)
 * In the directory `data` there are some sample data sets, and the json schema required to upload to Google BigQuery
 * The directory `iens_scraper` contains:
-    * the `spider` folder set up by Scrapy with the crawler in `iens_spider.py`
+    * the `spider` folder set up by Scrapy with 2 crawlers
+		* `iens_spider.py` (scrapes all info about the restaurant excl. comments)
+		* `iens_spider_comments.py` (scrapes restaurant id, name and comments)
     * Other required code (nothing necessary yet)
 
 ### About Scrapy
@@ -20,6 +22,10 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 Use below code to call the spider named `iens`:
 ```
 scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
+```
+and for the comments call the spider names `iens_comments`:
+```
+scrapy crawl iens_comments -a placename=amsterdam -o output/iens_comments.jsonlines -s LOG_FILE=output/scrapy_comments.log
 ```
 The following arguments can be set:
 * `-a placename` to choose the city name for the restaurants to be scraped. Argument is passed on to the spider class
@@ -100,6 +106,11 @@ Check out the schema and sample data in the `data` folder. To upload the table d
 ```
 bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_schema.json iens.iens_sample data/iens_sample.jsonlines
 ```
+and also the comments data
+```
+bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_comments_schema.json iens.iens_comments data/iens_comments.jsonlines
+```
+
 
 After uploading, the data can now be queried from the command line. For example, for the `data/iens_sample` table, the 
 following query will return all restaurant names with a `Romantisch` tag:
