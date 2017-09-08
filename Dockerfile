@@ -10,6 +10,11 @@ ADD iens_scraper/ /app
 ADD requirements.txt /app
 ADD entrypoint.sh /app
 
+# Copy the json schema for the output into the container
+ADD data/iens_schema.json /app
+# to test if uploading to bq works (in combination with command in entrypoint)
+#ADD data/iens_sample.jsonlines /app
+
 # Create subdirectory for output which you can mount to local folder
 RUN mkdir dockeroutput
 

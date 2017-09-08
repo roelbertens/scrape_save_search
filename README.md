@@ -5,7 +5,8 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 ### To-do
 
 * Remove bugs in parsing some restaurants with really sparse address information. See errors in `output/scrapy_errors_20170811`
-* Finding my way on how to write data to bigquery from python > needs to be build into container
+* Make sure container in google container engine can write to bigquery
+* Scraping comments: include dates, grades, number of reviews, name of reviewer
 
 ### Folder structure
 
@@ -57,18 +58,6 @@ docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper
 Within this command `-v` does a volume mount to a local folder to store the data. Note that we don't call the volume
 mount within the script as the path is system-dependent and thus isn't known in advance.
 
-### Google Cloud container registry
-
-Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
-push and pull to the Google Container Registry.
-
-To tag and push your image to the container registry do:
-```
-docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
-gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
-```
-You should now be able to see the image in the container registry.
-
 ### Google storage options
 
 Based on the following [decision tree](https://cloud.google.com/storage-options/) Google recommends us to use BigQuery.
@@ -101,3 +90,50 @@ bq query "SELECT info.name FROM iens.iens_sample WHERE tags CONTAINS 'Romantisch
 
 To clean up and avoid charges to your account, remove all tables within the `iens` dataset with `bq rm -r iens`.
 
+**Google BigQuery from Python** 
+
+Initially, the idea was to upload the scraper output to BigQuery from Python. However, it is not entirely clear how to 
+add the table schema to the Python API, to avoid creating a new schema using [SchemaField](https://github.com/GoogleCloudPlatform/google-cloud-python/tree/master/bigquery). The following python code 
+on [github](https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/bigquery/api/load_data_from_csv.py) 
+uses `job_data` to add a json schema to the job, but it seemed easier to just add the above command line option to 
+`entrypoint.sh`.
+ 
+Here is some nice [documentation](https://cloud.google.com/bigquery/create-simple-app-api#bigquery-simple-app-build-service-python)
+in case you do want to work with BigQuery from Python.
+
+### Google Cloud container registry
+
+Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
+push and pull to the Google Container Registry.
+
+To tag and push your image to the container registry do:
+```bash
+docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
+gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
+```
+You should now be able to see the image in the container registry.
+
+### Google Cloud container engine
+
+To run an application you need a container cluster from the Google Container Engine. Follow [this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
+and spin up a cluster from the command line with:
+```bash
+gcloud container clusters create iens-cluster --num-nodes=1
+```
+By default Google deploys machines with 1 core and 3.75GB. 
+
+Run the following command to deploy your application, and check that it is running with `kubectl get pods`:
+```bash
+kubectl run iens-deploy --image=eu.gcr.io/gdd-friday/iens_scraper_gc:v1
+```
+As the deployed container starts with scraping, it is not immediately clear if it is working. Therefore, we can create
+another version of the container and apply a rolling update to test specific components. For example:
+- Build a new image where you uncomment the scraping command in `entrypoint.sh` and where you use the dummy data 
+`iens_sample.jsonlines`, to test whether the container cluster is able to upload that sample file to BigQuery at all.
+>>>> currently crashes as container environment doesn't know bq command. Use google cloud sdk container as base unit? 
+https://hub.docker.com/r/google/cloud-sdk/ check wat data science project guys deden
+
+
+
+To do: give cluster access to BigQuery! (can be done by clicking in UI, but how in command line?)
+https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances?hl=en_US&_ga=2.119878856.-1556116188.1504874983
