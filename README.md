@@ -13,7 +13,9 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 * In the main project folder we have all setup files (like Dockerfile, entrypoint.sh and requirements.txt)
 * In the directory `data` there are some sample data sets, and the json schema required to upload to Google BigQuery
 * The directory `iens_scraper` contains:
-    * the `spider` folder set up by Scrapy with the crawler in `iens_spider.py`
+    * the `spider` folder set up by Scrapy with 2 crawlers
+		* `iens_spider.py` (scrapes all info about the restaurant excl. comments)
+		* `iens_spider_comments.py` (scrapes restaurant id, name and comments)
     * Other required code (nothing necessary yet)
 
 ### About Scrapy
@@ -21,6 +23,10 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 Use below code to call the spider named `iens`:
 ```
 scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
+```
+and for the comments call the spider names `iens_comments`:
+```
+scrapy crawl iens_comments -a placename=amsterdam -o output/iens_comments.jsonlines -s LOG_FILE=output/scrapy_comments.log
 ```
 The following arguments can be set:
 * `-a placename` to choose the city name for the restaurants to be scraped. Argument is passed on to the spider class
@@ -58,15 +64,24 @@ docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper
 Within this command `-v` does a volume mount to a local folder to store the data. Note that we don't call the volume
 mount within the script as the path is system-dependent and thus isn't known in advance.
 
-### Google storage options
+### Google Cloud
+
+To get started from the command line download the Google Cloud SDK and set up your credentials. The following [link](https://cloud.google.com/docs/authentication/getting-started) 
+could be instrumental in doing this. Add the path to your key to `.bash_profile` so that bash knows where to find it:
+
+```
+# google cloud service key
+export GOOGLE_APPLICATION_CREDENTIALS='${path-to-your-credentials.json}'
+```
+
+#### Google storage options
 
 Based on the following [decision tree](https://cloud.google.com/storage-options/) Google recommends us to use BigQuery.
 
 However, we need to be sure that BigQuery [supports](https://cloud.google.com/bigquery/data-formats) the JSON format the
 data is in after scraping. That seems to be possible with nested JSON (which is the case here), so let's give it a try.
 
-### Google BigQuery
-
+#### Google BigQuery
 
 Follow quickstart command line [tutorial](https://cloud.google.com/bigquery/quickstart-command-line) to get up to speed 
 on how to query BigQuery. For example use `bq ls` to list all data sets within your default project. 
@@ -78,7 +93,11 @@ BigQuery doesn't like JSON as a list, so make sure you use `.jsonlines` as outpu
 Check out the schema and sample data in the `data` folder. To upload the table do:
 
 ```
-bq load --source_format=NEWLINE_DELIMITED_JSON --schema=iens_schema.json iens.iens_sample iens_sample.jsonlines
+bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_schema.json iens.iens_sample data/iens_sample.jsonlines
+```
+and also the comments data
+```
+bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_comments_schema.json iens.iens_comments data/iens_comments.jsonlines
 ```
 
 After uploading, the data can now be queried from the command line. For example, for the `data/iens_sample` table, the 
@@ -101,7 +120,7 @@ uses `job_data` to add a json schema to the job, but it seemed easier to just ad
 Here is some nice [documentation](https://cloud.google.com/bigquery/create-simple-app-api#bigquery-simple-app-build-service-python)
 in case you do want to work with BigQuery from Python.
 
-### Google Cloud container registry
+#### Google Cloud container registry
 
 Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
 push and pull to the Google Container Registry.
@@ -113,7 +132,7 @@ gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
 ```
 You should now be able to see the image in the container registry.
 
-### Google Cloud container engine
+#### Google Cloud container engine
 
 To run an application you need a container cluster from the Google Container Engine. Follow [this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
 and spin up a cluster from the command line with:
@@ -132,7 +151,6 @@ another version of the container and apply a rolling update to test specific com
 `iens_sample.jsonlines`, to test whether the container cluster is able to upload that sample file to BigQuery at all.
 >>>> currently crashes as container environment doesn't know bq command. Use google cloud sdk container as base unit? 
 https://hub.docker.com/r/google/cloud-sdk/ check wat data science project guys deden
-
 
 
 To do: give cluster access to BigQuery! (can be done by clicking in UI, but how in command line?)
