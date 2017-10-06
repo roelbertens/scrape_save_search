@@ -5,8 +5,14 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 ### To-do
 
 * Remove bugs in parsing some restaurants with really sparse address information. See errors in `output/scrapy_errors_20170811`
-* Make sure container in google container engine can write to bigquery
 * Scraping comments: include dates, grades, number of reviews, name of reviewer
+* Make sure container in google container engine can write to bigquery:
+    - Create Service Account (=authentication) that has rights to write data to bigquery (=authorization)
+    - Generate a key for this service account and copy it into the container
+    - Have the container install the right google cloud sdk packages
+    - Make it write the data to bigquery
+* Create 1 DAG in Airflow to schedule: 1) the scraper, and 2) writing the output to bigquery (dependent on step 1)
+* Setup Terraform script to provision the Google Cloud environment that is needed (more robust than clicking in web UI)
 
 ### Folder structure
 
@@ -155,3 +161,7 @@ https://hub.docker.com/r/google/cloud-sdk/ check wat data science project guys d
 
 To do: give cluster access to BigQuery! (can be done by clicking in UI, but how in command line?)
 https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances?hl=en_US&_ga=2.119878856.-1556116188.1504874983
+
+### Architecture Google Cloud setup for Iens:
+
+!(architecture sketch)[/GC-architecture.jpg]
