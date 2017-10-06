@@ -164,4 +164,4 @@ https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-
 
 ### Architecture Google Cloud setup for Iens:
 
-!(architecture sketch)[/GC-architecture.jpg]
+![architecture sketch](/GC-architecture.jpg)
