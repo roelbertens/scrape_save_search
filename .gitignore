@@ -4,3 +4,4 @@ venv-iens/
 output/
 data/
 *.json
+.ipynb_checkpoints/

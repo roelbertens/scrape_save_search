@@ -3,12 +3,59 @@
 
 import scrapy
 import re
+import jsonlines
+import datetime as dt
+import re
+import json
 
- # function to get review text
+months = {
+    'jan': '1',
+    'feb': '2',
+    'mrt': '3',
+    'apr': '4',
+    'mei': '5',
+    'jun': '6',
+    'jul': '7',
+    'aug': '8',
+    'sep': '9',
+    'okt': '10',
+    'nov': '11',
+    'dec': '12'
+}
+
+def parse_date(date_string):
+    date_string = date_string[date_string.find('Datum van je bezoek: ')+21:].strip()
+    pattern = re.compile(r'\b(' + '|'.join(months.keys()) + r')\b')
+    date_string = pattern.sub(lambda x: months[x.group()], date_string)
+    return dt.datetime.strptime(date_string.replace('.',''), '%d %m %Y').strftime('%Y-%m-%d')
+
+
+def get_comment(xml):
+  tag = '<div class="reviewItem-customerComment">'
+  start = xml.find(tag) + len(tag)
+  end = xml[start:].find('</div>')
+  return xml[start:start+end]
+
+
+def get_reviewer(xml):
+  tag = '"author":{"@type":"Person","name":"'
+  start = xml.find(tag) + len(tag)
+  end = xml[start:].find('"}')
+  return xml[start:start+end]
+
+
+def is_certified(xml):
+  if xml.find('<li class="reviewItem-certified">') != -1:
+    return True
+  return False
+
+
+ # function to get review text based on an xpath expression
  #  /text() gets text of specific tag
  # //text() gets text of specific tag and of its children
-def get_review_text(response, tag, review_item_type):
+def get_contents(response, tag, review_item_type):
     return response.xpath('//' + tag + '[@class="reviewItem-' + review_item_type + '"]/text()').extract()
+
 
 # scrape all restaurants given a listings page
 class IensSpider(scrapy.Spider):
@@ -20,8 +67,16 @@ class IensSpider(scrapy.Spider):
 
     # get info from restaurant page
     def parse_restaurant(self, response):
+        texts = []
+        certified = []
+        for comment in response.xpath('//div[@class="reviewItem reviewItem--mainCustomer"]'):
+            texts.append(get_comment(comment.extract()))
+            certified.append(is_certified(comment.extract()))
 
-        yield {
+        dates = [parse_date(date) for date in get_contents(response, 'li', 'date')]
+        reviewers = [reviewer.strip() for reviewer in get_contents(response, 'div', 'profileDisplayName l-f')]
+
+        result =  {
             # restaurant info data
             'info': {
                 # get id from the url, other info from the webpage
@@ -29,9 +84,15 @@ class IensSpider(scrapy.Spider):
                 'name': response.xpath('//h1[@class="restaurantSummary-name"]/text()').extract_first()
             },
 
-            # collect review data
-            'comments': get_review_text(response, 'div', 'customerComment')
+            # collect text, reviewer, date and if the reviewer is certified
+            'comments': {
+                'texts': texts,
+                'reviewers': reviewers,
+                'dates': dates,
+                'certified': certified,
+            }
         }
+        yield result
 
     # get all restaurant links from all listings pages
     def parse(self, response):
