@@ -5,3 +5,4 @@ output/
 data/
 *.json
 .ipynb_checkpoints/
+google-credentials/gsdk-credentials.json

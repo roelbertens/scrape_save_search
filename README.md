@@ -6,16 +6,11 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 
 * Remove bugs in parsing some restaurants with really sparse address information. See errors in `output/scrapy_errors_20170811`
 * Scraping comments: include dates, grades, number of reviews, name of reviewer
-* Make sure container in google container engine can write to bigquery:
-    - Create Service Account (=authentication) that has rights to write data to bigquery (=authorization)
-    - Generate a key for this service account and copy it into the container
-    - Have the container install the right google cloud sdk packages
-    - Make it write the data to bigquery
 * Create 1 DAG in Airflow to schedule: 1) the scraper, and 2) writing the output to bigquery (dependent on step 1)
 * Setup Terraform script to provision the Google Cloud environment that is needed (more robust than clicking in web UI)
 * Write log files somewhere to google cloud? otherwise get lost
 
-### Folder structure
+## Folder structure
 
 * In the main project folder we have all setup files (like Dockerfile, entrypoint.sh and requirements.txt)
 * In the directory `data` there are some sample data sets, and the json schema required to upload to Google BigQuery
@@ -24,15 +19,19 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 		* `iens_spider.py` (scrapes all info about the restaurant excl. comments)
 		* `iens_spider_comments.py` (scrapes restaurant id, name and comments)
     * Other required code (nothing necessary yet)
+* Your private google service account credentials should be saved in folder `google-credentials`.
 
-### Set-up environment
+## Set-up environment
 
 To set-up your environment, navigate to the project directory in your terminal and run:
 ```bash
 conda env create -f environment.yml
 ```
 
-### About Scrapy
+
+## About the different components
+
+### Scrapy
 
 Use below code to call the spider named `iens` from the `iens_scraper` folder:
 ```
@@ -86,13 +85,20 @@ mount within the script as the path is system-dependent and thus isn't known in 
 
 ### Google Cloud
 
-To get started from the command line download the Google Cloud SDK and set up your credentials. The following [link](https://cloud.google.com/docs/authentication/getting-started) 
-could be instrumental in doing this. Add the path to your key to `.bash_profile` so that bash knows where to find it:
+To get started from the command line download the Google Cloud SDK and set up your credentials. The following 
+[link](https://cloud.google.com/docs/authentication/getting-started) could be instrumental in doing this. Add the path 
+to your key to `.bash_profile` so that bash knows where to find it when working locally. 
 
 ```
 # google cloud service key
 export GOOGLE_APPLICATION_CREDENTIALS='${path-to-your-credentials.json}'
 ```
+
+To make sure that your container can write to bigquery do something similar:
+- Create a Service Account (=authentication) that has rights to write data to bigquery (=authorization)
+- Generate a key for this service account and copy it into the container
+- Have the container install the right google cloud sdk packages
+- Make it write the data to bigquery
 
 #### Google storage options
 
