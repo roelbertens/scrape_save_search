@@ -24,6 +24,13 @@ months = {
 }
 
 
+def get_rating(xml):
+  tag = 'rating-ratingValue">'
+  start = xml.find(tag) + len(tag)
+  end = xml[start:].find('</span>')
+  return xml[start:start+end].strip()
+
+
 def get_reviewer(xml):
   tag = 'reviewItem-profileDisplayName'
   start = xml.find(tag) + len(tag) + 63 # Watch out!
@@ -65,6 +72,17 @@ def get_contents(response, tag, review_item_type):
     return response.xpath('//' + tag + '[@class="reviewItem-' + review_item_type + '"]/text()').extract()
 
 
+def parse_single_comments_page(response, restaurant_id, restaurant_name):
+    for comment_block in response.xpath('//div[@class="reviewItem reviewItem--mainCustomer"]'):
+        comment = get_comment(comment_block.extract())
+        certified = is_certified(comment_block.extract())
+        date = get_date(comment_block.extract())
+        reviewer = get_reviewer(comment_block.extract())
+        # rating = get_rating(comment_block.extract())
+        return {'id': restaurant_id, 'name': restaurant_name, 'comment': comment,
+            'reviewer': reviewer, 'date': date, 'certified': certified}#, 'rating': rating}
+
+
 # scrape all restaurants given a listings page
 class IensSpider(scrapy.Spider):
     name = "iens_comments"
@@ -72,35 +90,15 @@ class IensSpider(scrapy.Spider):
     def start_requests(self):
         yield scrapy.Request('https://www.iens.nl/restaurant+%s' % self.placename)
 
-
-    # get info from restaurant page
+    # create 1 record for each comment
     def parse_restaurant(self, response):
-        texts = []
-        certified = []
-        dates = []
-        reviewers = []
-        for comment in response.xpath('//div[@class="reviewItem reviewItem--mainCustomer"]'):
-            texts.append(get_comment(comment.extract()))
-            certified.append(is_certified(comment.extract()))
-            dates.append(get_date(comment.extract()))
-            reviewers.append(get_reviewer(comment.extract()))
+        restaurant_id = response.url.split('/')[-1]
+        restaurant_id = int(restaurant_id) if restaurant_id.find('?') == -1 else int(restaurant_id[:restaurant_id.find('?')])
+        restaurant_name = response.xpath('//h1[@class="restaurantSummary-name"]/text()').extract_first()
+        yield parse_single_comments_page(response, restaurant_id, restaurant_name)
+        for a in response.xpath('//ul[@class="pagination oneline text_right"]/li/a'):
+            yield response.follow(a, callback=self.parse_restaurant)
 
-        result =  {
-            # restaurant info data
-            'info': {
-                # get id from the url, other info from the webpage
-                'id': int(response.url.split('/')[-1]),
-                'name': response.xpath('//h1[@class="restaurantSummary-name"]/text()').extract_first()
-            },
-            # collect text, reviewer, date and if the reviewer is certified
-            'comments': {
-                'texts': texts,
-                'reviewers': reviewers,
-                'dates': dates,
-                'certified': certified,
-            }
-        }
-        yield result
 
     # get all restaurant links from all listings pages
     def parse(self, response):
@@ -108,7 +106,6 @@ class IensSpider(scrapy.Spider):
         # loop over all restaurant links and parse info from restaurant page
         for link in response.xpath('//li[@class="resultItem"]/div/h3/a'):
             yield response.follow(link, callback=self.parse_restaurant)
-
 
         # Loop over all listings. response.follow uses href attribute to automatically follow url of <a> tags
         for a in response.xpath('//div[@class="pagination"]/ul/li[@class="next"]/a'):
