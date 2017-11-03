@@ -23,6 +23,14 @@ months = {
     'dec': '12'
 }
 
+
+def get_reviewer(xml):
+  tag = 'reviewItem-profileDisplayName'
+  start = xml.find(tag) + len(tag) + 63 # Watch out!
+  end = xml[start:].find('</div>')
+  return xml[start:start+end].strip()
+
+
 def parse_date(date_string):
     date_string = date_string[date_string.find('Datum van je bezoek: ')+21:].strip()
     pattern = re.compile(r'\b(' + '|'.join(months.keys()) + r')\b')
@@ -30,17 +38,17 @@ def parse_date(date_string):
     return dt.datetime.strptime(date_string.replace('.',''), '%d %m %Y').strftime('%Y-%m-%d')
 
 
+def get_date(xml):
+  tag = '<li class="reviewItem-date">'
+  start = xml.find(tag) + len(tag)
+  end = xml[start:].find('</li>')
+  return parse_date(xml[start:start+end])
+
+
 def get_comment(xml):
   tag = '<div class="reviewItem-customerComment">'
   start = xml.find(tag) + len(tag)
   end = xml[start:].find('</div>')
-  return xml[start:start+end]
-
-
-def get_reviewer(xml):
-  tag = '"author":{"@type":"Person","name":"'
-  start = xml.find(tag) + len(tag)
-  end = xml[start:].find('"}')
   return xml[start:start+end]
 
 
@@ -69,12 +77,13 @@ class IensSpider(scrapy.Spider):
     def parse_restaurant(self, response):
         texts = []
         certified = []
+        dates = []
+        reviewers = []
         for comment in response.xpath('//div[@class="reviewItem reviewItem--mainCustomer"]'):
             texts.append(get_comment(comment.extract()))
             certified.append(is_certified(comment.extract()))
-
-        dates = [parse_date(date) for date in get_contents(response, 'li', 'date')]
-        reviewers = [reviewer.strip() for reviewer in get_contents(response, 'div', 'profileDisplayName l-f')]
+            dates.append(get_date(comment.extract()))
+            reviewers.append(get_reviewer(comment.extract()))
 
         result =  {
             # restaurant info data
@@ -83,7 +92,6 @@ class IensSpider(scrapy.Spider):
                 'id': int(response.url.split('/')[-1]),
                 'name': response.xpath('//h1[@class="restaurantSummary-name"]/text()').extract_first()
             },
-
             # collect text, reviewer, date and if the reviewer is certified
             'comments': {
                 'texts': texts,
