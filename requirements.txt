@@ -1,0 +1,2 @@
+# These are requirements for the Docker image, NOT for the local virtual environment
+scrapy==1.4.0
