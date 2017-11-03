@@ -1,2 +1,3 @@
 # These are requirements for the Docker image, NOT for the local virtual environment
 scrapy==1.4.0
+jsonlines==1.2.0

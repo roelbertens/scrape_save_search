@@ -4,3 +4,5 @@ channels:
 dependencies:
 - python=3.6.3
 - scrapy=1.4.0
+- pip:
+  - jsonlines==1.2.0

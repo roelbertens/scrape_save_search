@@ -33,7 +33,7 @@ conda env create -f environment.yml
 
 ### About Scrapy
 
-Use below code to call the spider named `iens`:
+Use below code to call the spider named `iens` from the `iens_scraper` folder:
 ```
 scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
 ```
@@ -76,7 +76,7 @@ To spin up a container named `iens_container` after you have created the image `
 ```
 docker run --rm --name iens_container -v /tmp:/app/dockeroutput iens_scraper
 ```
-Within this command `-v` does a volume mount to a local folder to store the data. Note that we don't call the volume
+Within this command `-v` does a volume mount to the local `/tmp` folder to store the data. Note that we don't call the volume
 mount within the script as the path is system-dependent and thus isn't known in advance.
 
 ### Google Cloud
