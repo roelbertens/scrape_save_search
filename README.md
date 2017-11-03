@@ -24,6 +24,13 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 		* `iens_spider_comments.py` (scrapes restaurant id, name and comments)
     * Other required code (nothing necessary yet)
 
+### Set-up environment
+
+To set-up your environment, navigate to the project directory in your terminal and run:
+```bash
+conda env create -f environment.yml
+```
+
 ### About Scrapy
 
 Use below code to call the spider named `iens`:
@@ -31,9 +38,11 @@ Use below code to call the spider named `iens`:
 scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
 ```
 and for the comments call the spider names `iens_comments`:
+
 ```
 scrapy crawl iens_comments -a placename=amsterdam -o output/iens_comments.jsonlines -s LOG_FILE=output/scrapy_comments.log
 ```
+
 The following arguments can be set:
 * `-a placename` to choose the city name for the restaurants to be scraped. Argument is passed on to the spider class
 * `-o` for the location of the output file. Use file extention `.jsonlines` instead of `.json` for input Google BigQuery

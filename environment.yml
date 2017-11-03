@@ -1,0 +1,6 @@
+name: iens
+channels:
+- defaults
+dependencies:
+- python=3.6.3
+- scrapy=1.4.0
