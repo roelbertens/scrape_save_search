@@ -32,8 +32,6 @@ class IensSpider(scrapy.Spider):
 
     # get info from restaurant page
     def parse_restaurant(self, response):
-
-
         avg_price = -1
         avg_price_text = response.xpath('//div[contains(concat(" ", normalize-space(@class), " "), "restaurantSummary-price")]/text()').extract_first()
         if avg_price_text is not None:
