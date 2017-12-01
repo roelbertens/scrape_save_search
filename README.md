@@ -167,41 +167,41 @@ To clean up and avoid charges to your account, remove all tables within the `ien
 
 ## Bonus: running the container in the cloud
 
-#### Google Cloud container registry
+#### Google Container Registry
 
-Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
-push and pull to the Google Container Registry.
+Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) 
+on how to push and pull to the Google Container Registry.
 
-To tag and push your image to the container registry do:
+To tag and push your existing image to the Container Registry do:
 ```bash
 docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
 gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
 ```
-You should now be able to see the image in the container registry.
+You should now be able to see the image in the Container Registry.
 
-#### Google Cloud container engine
+#### Google Container Engine
 
-To run an application you need a container cluster from the Google Container Engine. Follow [this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
+To run the application we need a Kubernetes container cluster. Kubernetes represents applications as 
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/), which is basically a group of one or 
+more tightly-coupled containers. The Pod is the smallest deployable unit in Kubernetes. 
+
+We can obtain such a cluster easily with the Google Container Engine. Follow 
+[this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
 and spin up a cluster from the command line with:
 ```bash
 gcloud container clusters create iens-cluster --num-nodes=1
 ```
-By default Google deploys machines with 1 core and 3.75GB. 
+By default Google deploys machines with 1 core and 3.75GB.
 
-Run the following command to deploy your application, and check that it is running with `kubectl get pods`:
+To deploy your application, run the below command. Check that it is running with `kubectl get pods` afterwards.
 ```bash
-kubectl run iens-deploy --image=eu.gcr.io/gdd-friday/iens_scraper_gc:v1
+kubectl run iens-deploy --image=eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
 ```
-As the deployed container starts with scraping, it is not immediately clear if it is working. Therefore, we can create
-another version of the container and apply a rolling update to test specific components. For example:
-- Build a new image where you uncomment the scraping command in `entrypoint.sh` and where you use the dummy data 
-`iens_sample.jsonlines`, to test whether the container cluster is able to upload that sample file to BigQuery at all.
-> currently crashes as container environment doesn't know bq command. Use google cloud sdk container as base unit? 
-https://hub.docker.com/r/google/cloud-sdk/ check wat data science project guys deden
+Congrats! You now have a machine in the cloud that is scraping Ines for you!
 
-
-To do: give cluster access to BigQuery! (can be done by clicking in UI, but how in command line?)
-https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances?hl=en_US&_ga=2.119878856.-1556116188.1504874983
+Do note: it doesn't make a lot of sense to do this as the scraping is currently a one time thing. This means
+the cluster stays alive even after the scraping is done, which will unnecessarily cost you money. It does make
+sense when we would want to schedule an iterative task (with Airflow or Cron), like scraping each hour.
 
 ### Architecture Google Cloud setup for Iens:
 
