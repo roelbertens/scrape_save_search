@@ -31,11 +31,19 @@ upload the output to BigQuery.
     ```bash
     docker build --build-arg city=<value> -t iens_scraper .
     ```
-3. Run the container that scrapes and saves the output for you in BigQuery. 
+3. Run the container that scrapes and saves the output for you in BigQuery. The volume mount is
+    optionally and comes in handy if you want the data and logs to be stored locally as well. 
     ```bash
     docker run --name iens_container -v /tmp:/app/dockeroutput iens_scraper
-    ```
-    - Optionally: mount the output to your local pc as well (could be handy for logs) 
+    ``` 
+
+## Architecture
+
+Below picture gives a high level impression of the setup: running a Python Scrapy webcrawler from a container 
+that outputs JSON, which is then uploaded to BigQuery for storage and analysis. The container can be run locally
+or, optionally, in the cloud with Google's Container Engine.
+
+![architecture pic](images/architecture.png)
 
 ## Details for each step
 
@@ -112,11 +120,11 @@ When testing whether you have set up your image correctly, it can be handy to ba
 * When inside the container, check for example if imported folders are what you expect and whether you can run all 
 commands that are in your `entrypoint.sh` file. Try running Scrapy and uploading to BigQuery. 
 
-### Google Cloud SDK & Authentication
+### Google Cloud SDK and Authentication
 
 To get started from the command line download the Google Cloud SDK and set up your credentials. The following 
 [link](https://cloud.google.com/docs/authentication/getting-started) could be instrumental in doing this. Add the path 
-to your key to `.bash_profile` so that bash knows where to find it when working locally. 
+to your service key to `.bash_profile` so that bash knows where to find it when working locally. 
 
 ```bash
 # google cloud service key
@@ -124,10 +132,10 @@ export GOOGLE_APPLICATION_CREDENTIALS='${path-to-your-gc-credentials.json}'
 ```
 
 Similarly, we'll have to set up Google Cloud SDK and credentials for the container. When in the Cloud Console UI, go 
-to IAM & Admin and create a service account under the tab 'Service Accounts'. Save the private 
-key in the project folder named `google-credentials`. Next go to tab 'IAM' and assign permissions (roles) to the newly 
-created service account. For writing to BigQuery we need permission 'bigquery.tables.create'. We can give this by 
-assigning the role 'BigQuery Data Editor' or higher.
+to IAM & Admin and create a service account under the tab *Service Accounts*. Save the private 
+key in the project folder named `google-credentials`. Next go to tab *IAM* and assign permissions (roles) to the newly 
+created service account. For writing to BigQuery we need permission *bigquery.tables.create*. We can give this by 
+assigning the role *BigQuery Data Editor* or higher.
 
 Your private key saved in `google-credentials\gsdk-credentials.json` is copied into the container when building the 
 Docker image. When running a container, the key is then used to authenticate to Google Cloud.
@@ -135,10 +143,10 @@ Docker image. When running a container, the key is then used to authenticate to 
 ### Google BigQuery
 
 Based on the following [decision tree](https://cloud.google.com/storage-options/) Google recommends us to use BigQuery.
-What it doesn't tell us is that Google Storage is cheaper than BigQuery when it comes to pure storage. If you deal with 
-a lot of data, it could therefore be better to write everything to a storage bucket and import it in BigQuery only when
-you want to analyze it. As our data is not that big, we don't bother. Also note: BigQuery charges you for the quantity 
-of data queried. Therefore don't do a `SELECT *`, and only query columns you actually need.
+Pricing on storage and compute can be found [here](https://cloud.google.com/bigquery/pricing). As our data is not 
+that big, we pay nothing as we remain within the free tier of 10GB storage and 1TB of queries per month. 
+Do note: BigQuery charges you for the quantity of data queried. 
+Therefore avoid doing a `SELECT *`, and only query columns you actually need.
 
 Follow this quickstart command line [tutorial](https://cloud.google.com/bigquery/quickstart-command-line) to get up to 
 speed on how to query BigQuery. For example use `bq ls` to list all data sets within your default project. 
@@ -165,57 +173,40 @@ bq query "SELECT info.name FROM iens.iens_sample WHERE tags CONTAINS 'Romantisch
 
 To clean up and avoid charges to your account, remove all tables within the `iens` dataset with `bq rm -r iens`.
 
-**Google BigQuery from Python** 
+## Optionally: running the container in the cloud
 
-Initially, the idea was to upload the scraper output to BigQuery from Python. However, it is not entirely clear how to 
-add the table schema to the Python API, to avoid creating a new schema using 
-[SchemaField](https://github.com/GoogleCloudPlatform/google-cloud-python/tree/master/bigquery). The following python 
-code on 
-[github](https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/bigquery/api/load_data_from_csv.py) 
-uses `job_data` to add a json schema to the job, but it seemed easier to just use the cloud SDK in the GC base image.
- 
-Here is some  
-[documentation](https://cloud.google.com/bigquery/create-simple-app-api#bigquery-simple-app-build-service-python)
-in case you do want to work with BigQuery from Python.
+### Google Container Registry
 
-## Running the container in the cloud (TO DO)
+Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) 
+on how to push and pull to the Google Container Registry.
 
-#### Google Cloud container registry
-
-Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) on how to 
-push and pull to the Google Container Registry.
-
-To tag and push your image to the container registry do:
+To tag and push your existing image to the Container Registry do:
 ```bash
 docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
 gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
 ```
-You should now be able to see the image in the container registry.
+You should now be able to see the image in the Container Registry.
 
-#### Google Cloud container engine
+### Google Container Engine
 
-To run an application you need a container cluster from the Google Container Engine. Follow [this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
+To run the application we need a Kubernetes container cluster. Kubernetes represents applications as 
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/), which is basically a group of one or 
+more tightly-coupled containers. The Pod is the smallest deployable unit in Kubernetes. 
+
+We can obtain such a cluster easily with the Google Container Engine. Follow 
+[this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
 and spin up a cluster from the command line with:
 ```bash
 gcloud container clusters create iens-cluster --num-nodes=1
 ```
-By default Google deploys machines with 1 core and 3.75GB. 
+By default Google deploys machines with 1 core and 3.75GB.
 
-Run the following command to deploy your application, and check that it is running with `kubectl get pods`:
+To deploy your application, run the below command. Check that it is running with `kubectl get pods` afterwards.
 ```bash
-kubectl run iens-deploy --image=eu.gcr.io/gdd-friday/iens_scraper_gc:v1
+kubectl run iens-deploy --image=eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
 ```
-As the deployed container starts with scraping, it is not immediately clear if it is working. Therefore, we can create
-another version of the container and apply a rolling update to test specific components. For example:
-- Build a new image where you uncomment the scraping command in `entrypoint.sh` and where you use the dummy data 
-`iens_sample.jsonlines`, to test whether the container cluster is able to upload that sample file to BigQuery at all.
-> currently crashes as container environment doesn't know bq command. Use google cloud sdk container as base unit? 
-https://hub.docker.com/r/google/cloud-sdk/ check wat data science project guys deden
+Congrats! You now have a machine in the cloud that is scraping Ines for you!
 
-
-To do: give cluster access to BigQuery! (can be done by clicking in UI, but how in command line?)
-https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances?hl=en_US&_ga=2.119878856.-1556116188.1504874983
-
-### Architecture Google Cloud setup for Iens:
-
-![architecture sketch](/GC-architecture.jpg)
+Do note: it doesn't make a lot of sense to do this as the scraping is currently a one time thing. This means
+the cluster stays alive even after the scraping is done, which will unnecessarily cost you money. It does make
+sense when we would want to schedule an iterative task (with Airflow or Cron), like scraping each hour.
