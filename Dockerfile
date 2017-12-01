@@ -2,7 +2,8 @@
 # see if we can use the slim image
 # uses python 2.7.9 > also use this for testing scrapy locally?
 FROM google/cloud-sdk:latest
-ARG city=diemen
+# get argument city to scrape, defaults to Amsterdam
+ARG city=amsterdam
 ENV CITY=${city}
 
 # install packages (jq for retrieving service account email from json)
