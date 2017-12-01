@@ -31,11 +31,11 @@ upload the output to BigQuery.
     ```bash
     docker build --build-arg city=<value> -t iens_scraper .
     ```
-3. Run the container that scrapes and saves the output for you in BigQuery. 
+3. Run the container that scrapes and saves the output for you in BigQuery. The volume mount is
+    optionally and comes in handy if you want the data and logs to be stored locally as well. 
     ```bash
     docker run --name iens_container -v /tmp:/app/dockeroutput iens_scraper
-    ```
-    - Optionally: mount the output to your local pc as well (could be handy for logs) 
+    ``` 
 
 ## Details for each step
 
@@ -112,11 +112,11 @@ When testing whether you have set up your image correctly, it can be handy to ba
 * When inside the container, check for example if imported folders are what you expect and whether you can run all 
 commands that are in your `entrypoint.sh` file. Try running Scrapy and uploading to BigQuery. 
 
-### Google Cloud SDK & Authentication
+### Google Cloud SDK and Authentication
 
 To get started from the command line download the Google Cloud SDK and set up your credentials. The following 
 [link](https://cloud.google.com/docs/authentication/getting-started) could be instrumental in doing this. Add the path 
-to your key to `.bash_profile` so that bash knows where to find it when working locally. 
+to your service key to `.bash_profile` so that bash knows where to find it when working locally. 
 
 ```bash
 # google cloud service key
@@ -124,10 +124,10 @@ export GOOGLE_APPLICATION_CREDENTIALS='${path-to-your-gc-credentials.json}'
 ```
 
 Similarly, we'll have to set up Google Cloud SDK and credentials for the container. When in the Cloud Console UI, go 
-to IAM & Admin and create a service account under the tab 'Service Accounts'. Save the private 
-key in the project folder named `google-credentials`. Next go to tab 'IAM' and assign permissions (roles) to the newly 
-created service account. For writing to BigQuery we need permission 'bigquery.tables.create'. We can give this by 
-assigning the role 'BigQuery Data Editor' or higher.
+to IAM & Admin and create a service account under the tab *Service Accounts*. Save the private 
+key in the project folder named `google-credentials`. Next go to tab *IAM* and assign permissions (roles) to the newly 
+created service account. For writing to BigQuery we need permission *bigquery.tables.create*. We can give this by 
+assigning the role *BigQuery Data Editor* or higher.
 
 Your private key saved in `google-credentials\gsdk-credentials.json` is copied into the container when building the 
 Docker image. When running a container, the key is then used to authenticate to Google Cloud.
@@ -135,10 +135,10 @@ Docker image. When running a container, the key is then used to authenticate to 
 ### Google BigQuery
 
 Based on the following [decision tree](https://cloud.google.com/storage-options/) Google recommends us to use BigQuery.
-What it doesn't tell us is that Google Storage is cheaper than BigQuery when it comes to pure storage. If you deal with 
-a lot of data, it could therefore be better to write everything to a storage bucket and import it in BigQuery only when
-you want to analyze it. As our data is not that big, we don't bother. Also note: BigQuery charges you for the quantity 
-of data queried. Therefore don't do a `SELECT *`, and only query columns you actually need.
+Pricing on storage and compute can be found [here](https://cloud.google.com/bigquery/pricing). As our data is not 
+that big, we pay nothing as we remain within the free tier of 10GB storage and 1TB of queries per month. 
+Do note: BigQuery charges you for the quantity of data queried. 
+Therefore avoid doing a `SELECT *`, and only query columns you actually need.
 
 Follow this quickstart command line [tutorial](https://cloud.google.com/bigquery/quickstart-command-line) to get up to 
 speed on how to query BigQuery. For example use `bq ls` to list all data sets within your default project. 
@@ -165,20 +165,7 @@ bq query "SELECT info.name FROM iens.iens_sample WHERE tags CONTAINS 'Romantisch
 
 To clean up and avoid charges to your account, remove all tables within the `iens` dataset with `bq rm -r iens`.
 
-**Google BigQuery from Python** 
-
-Initially, the idea was to upload the scraper output to BigQuery from Python. However, it is not entirely clear how to 
-add the table schema to the Python API, to avoid creating a new schema using 
-[SchemaField](https://github.com/GoogleCloudPlatform/google-cloud-python/tree/master/bigquery). The following python 
-code on 
-[github](https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/bigquery/api/load_data_from_csv.py) 
-uses `job_data` to add a json schema to the job, but it seemed easier to just use the cloud SDK in the GC base image.
- 
-Here is some  
-[documentation](https://cloud.google.com/bigquery/create-simple-app-api#bigquery-simple-app-build-service-python)
-in case you do want to work with BigQuery from Python.
-
-## Running the container in the cloud (TO DO)
+## Bonus: running the container in the cloud
 
 #### Google Cloud container registry
 
