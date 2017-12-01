@@ -86,43 +86,32 @@ class IensSpider(scrapy.Spider):
         yield scrapy.Request('https://www.iens.nl/restaurant+%s' % self.placename)
 
 
-    def parse_single_comments_page(self, response, restaurant_id, restaurant_name):
+    def parse_single_comments_page(self, response):
+        restaurant_id = response.url.split('/')[-1]
+        pos = restaurant_id.find('?')
+        restaurant_id = int(restaurant_id) if pos == -1 else int(restaurant_id[:pos])
+        restaurant_name = response.xpath('//h1[@class="restaurantSummary-name"]/text()').extract_first()
+
         for comment_block in response.xpath('//div[@class="reviewItem reviewItem--mainCustomer"]'):
-            # print('\treviewer: ')
             comment = get_comment(comment_block.extract())
             comment = re.sub('\n', ' ', comment)
             comment = re.sub('<br>', ' ', comment)
             certified = is_certified(comment_block.extract())
             date = get_date(comment_block.extract())
             reviewer = get_reviewer(comment_block.extract())
-            # print('\t', reviewer)
             rating = get_rating(comment_block.extract())
             yield {'id': restaurant_id, 'name': restaurant_name, 'comment': comment,
                 'reviewer': reviewer, 'date': date, 'certified': certified, 'rating': rating}
 
     # create 1 record for each comment
     def parse_restaurant(self, response):
-        restaurant_id = response.url.split('/')[-1]
-        pos = restaurant_id.find('?')
-        restaurant_id = int(restaurant_id) if pos == -1 else int(restaurant_id[:pos])
-        restaurant_name = response.xpath('//h1[@class="restaurantSummary-name"]/text()').extract_first()
+        try:
+          nr_of_pages = get_nr_of_pages(response.xpath('//ul[@class="pagination oneline text_right"]/li/a').extract()[-1])
+          for i in range(1, int(nr_of_pages)+1):
+              yield scrapy.Request(url=response.url+ '?page=' + str(i), callback=self.parse_single_comments_page)
+        except:
+            return self.parse_single_comments_page(response)
 
-        # print(get_nr_of_pages(response.xpath('//ul[@class="pagination oneline text_right"]/li/a').extract()[-1]))
-         # check if there are more pages with reviews
-        # try:
-        #     nr_of_pages = get_nr_of_pages(response.xpath('//ul[@class="pagination oneline text_right"]/li/a').extract()[-1])
-        #     print('nr_of_pages:', nr_of_pages)
-        #     i = 2
-        #     while i <= nr_of_pages:
-        #         new_link = 'https://www.iens.nl' + link.xpath('@href').extract_first() + '?page=' + i
-        #         response_next = response.follow(url=new_link)
-        #         yield self.parse_single_comments_page(response_next, restaurant_id, restaurant_name)
-        #         i += 1
-        # except:
-        #     pass
-
-        if True: #restaurant_name == 'Restaurant Winkk':
-            return self.parse_single_comments_page(response, restaurant_id, restaurant_name)
 
     # get all restaurant links from all listings pages
     def parse(self, response):
