@@ -5,3 +5,5 @@ output/
 .ipynb_checkpoints/
 google-credentials/gsdk-credentials.json
 .DS_Store
+archive/
+*.pptx

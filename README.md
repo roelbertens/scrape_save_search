@@ -37,6 +37,14 @@ upload the output to BigQuery.
     docker run --name iens_container -v /tmp:/app/dockeroutput iens_scraper
     ``` 
 
+## Architecture
+
+Below picture gives a high level impression of the setup: running a Python Scrapy webcrawler from a container 
+that outputs JSON, which is then uploaded to BigQuery for storage and analysis. The container can be run locally
+or, optionally, in the cloud with Google's Container Engine.
+
+![architecture pic](images/architecture.png)
+
 ## Details for each step
 
 In this section we describe in detail how to get each of the individual components to work.
@@ -165,9 +173,9 @@ bq query "SELECT info.name FROM iens.iens_sample WHERE tags CONTAINS 'Romantisch
 
 To clean up and avoid charges to your account, remove all tables within the `iens` dataset with `bq rm -r iens`.
 
-## Bonus: running the container in the cloud
+## Optionally: running the container in the cloud
 
-#### Google Container Registry
+### Google Container Registry
 
 Follow the following [tutorial](https://cloud.google.com/container-registry/docs/pushing-and-pulling?hl=en_US) 
 on how to push and pull to the Google Container Registry.
@@ -179,7 +187,7 @@ gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
 ```
 You should now be able to see the image in the Container Registry.
 
-#### Google Container Engine
+### Google Container Engine
 
 To run the application we need a Kubernetes container cluster. Kubernetes represents applications as 
 [Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod/), which is basically a group of one or 
@@ -202,7 +210,3 @@ Congrats! You now have a machine in the cloud that is scraping Ines for you!
 Do note: it doesn't make a lot of sense to do this as the scraping is currently a one time thing. This means
 the cluster stays alive even after the scraping is done, which will unnecessarily cost you money. It does make
 sense when we would want to schedule an iterative task (with Airflow or Cron), like scraping each hour.
-
-### Architecture Google Cloud setup for Iens:
-
-![architecture sketch](/GC-architecture.jpg)
