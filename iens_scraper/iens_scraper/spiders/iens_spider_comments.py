@@ -85,8 +85,7 @@ class IensSpider(scrapy.Spider):
     def start_requests(self):
         yield scrapy.Request('https://www.iens.nl/restaurant+%s' % self.placename)
 
-
-    def parse_single_comments_page(self, response):
+    def parse_restaurant(self, response):
         restaurant_id = response.url.split('/')[-1]
         pos = restaurant_id.find('?')
         restaurant_id = int(restaurant_id) if pos == -1 else int(restaurant_id[:pos])
@@ -95,23 +94,17 @@ class IensSpider(scrapy.Spider):
         for comment_block in response.xpath('//div[@class="reviewItem reviewItem--mainCustomer"]'):
             comment = get_comment(comment_block.extract())
             comment = re.sub('\n', ' ', comment)
-            comment = re.sub('<br>', ' ', comment)
+            comment = re.sub('<br>', ' ', comment).strip()
             certified = is_certified(comment_block.extract())
             date = get_date(comment_block.extract())
-            reviewer = get_reviewer(comment_block.extract())
-            rating = get_rating(comment_block.extract())
+            reviewer = get_reviewer(comment_block.extract()).strip()
+            rating = float(get_rating(comment_block.extract()).replace(',', '.'))
             yield {'id': restaurant_id, 'name': restaurant_name, 'comment': comment,
-                'reviewer': reviewer, 'date': date, 'certified': certified, 'rating': rating}
+                   'reviewer': reviewer, 'date': date, 'certified': certified, 'rating': rating}
 
-    # create 1 record for each comment
-    def parse_restaurant(self, response):
-        try:
-          nr_of_pages = get_nr_of_pages(response.xpath('//ul[@class="pagination oneline text_right"]/li/a').extract()[-1])
-          for i in range(1, int(nr_of_pages)+1):
-              yield scrapy.Request(url=response.url+ '?page=' + str(i), callback=self.parse_single_comments_page)
-        except:
-            return self.parse_single_comments_page(response)
-
+        # loop over all review data-page-numbers
+        for link in response.xpath('//ul[@class="pagination oneline text_right"]/li/a'):
+            yield response.follow(link, callback=self.parse_restaurant)
 
     # get all restaurant links from all listings pages
     def parse(self, response):
@@ -123,5 +116,3 @@ class IensSpider(scrapy.Spider):
         # Loop over all listings. response.follow uses href attribute to automatically follow url of <a> tags
         for a in response.xpath('//div[@class="pagination"]/ul/li[@class="next"]/a'):
             yield response.follow(a, callback=self.parse)
-
-
