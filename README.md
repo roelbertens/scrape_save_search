@@ -152,13 +152,13 @@ Follow this quickstart command line [tutorial](https://cloud.google.com/bigquery
 speed on how to query BigQuery. For example use `bq ls` to list all data sets within your default project. 
 
 BigQuery [supports](https://cloud.google.com/bigquery/data-formats) multiple data formats for uploading. To upload a 
-simple JSON file use the `--autodetect` option for BigQuery to detect the scehma. When the JSON structure 
- is more complicated, you can 
+simple JSON file use the `--autodetect` option for BigQuery to detect the schema. This works for the scraped reviews. 
+When the JSON structure is more complicated (like for the restaurant information data), you can 
  [upload a nested json](https://cloud.google.com/bigquery/loading-data#loading_nested_and_repeated_json_data). 
  To do this, you need a schema of the json file. A simple online editor could be used for the basis 
  (for example [jsonschema.net]()), but we needed to do some manual editing on top of that to get it into the schema 
  required by BigQuery. Also, it turns out that BigQuery doesn't like JSON as a list, so make sure you use `.jsonlines` 
- as output file extension from your sraper. Check out the schema and sample data in the `data` folder. 
+ as output file extension from your scraper. Check out the schema for the restaurant data in the `data` folder. 
 
 To upload data to BigQuery do:
 ```bash
