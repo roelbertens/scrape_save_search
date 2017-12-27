@@ -151,17 +151,19 @@ Therefore avoid doing a `SELECT *`, and only query columns you actually need.
 Follow this quickstart command line [tutorial](https://cloud.google.com/bigquery/quickstart-command-line) to get up to 
 speed on how to query BigQuery. For example use `bq ls` to list all data sets within your default project. 
 
-BigQuery [supports](https://cloud.google.com/bigquery/data-formats) the nested JSON format as outputted by the scraping.
-To [upload a nested json](https://cloud.google.com/bigquery/loading-data#loading_nested_and_repeated_json_data) you need
-a schema of the json file. A simple online editor could be used for the basis (for example [jsonschema.net]()), but we 
-needed to do some manual editing on top of that to get it into the schema required by BigQuery. Also, it turns out that 
-BigQuery doesn't like JSON as a list, so make sure you use `.jsonlines` as output file extension from your sraper. 
-Check out the schema and sample data in the `data` folder. 
+BigQuery [supports](https://cloud.google.com/bigquery/data-formats) multiple data formats for uploading. To upload a 
+simple JSON file use the `--autodetect` option for BigQuery to detect the scehma. When the JSON structure 
+ is more complicated, you can 
+ [upload a nested json](https://cloud.google.com/bigquery/loading-data#loading_nested_and_repeated_json_data). 
+ To do this, you need a schema of the json file. A simple online editor could be used for the basis 
+ (for example [jsonschema.net]()), but we needed to do some manual editing on top of that to get it into the schema 
+ required by BigQuery. Also, it turns out that BigQuery doesn't like JSON as a list, so make sure you use `.jsonlines` 
+ as output file extension from your sraper. Check out the schema and sample data in the `data` folder. 
 
 To upload data to BigQuery do:
 ```bash
 bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_schema.json iens.iens_sample data/iens_sample.jsonlines
-bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_comments_schema.json iens.iens_comments data/iens_comments.jsonlines
+bq load --autodetect --source_format=NEWLINE_DELIMITED_JSON iens.iens_comments data/iens_comments.jsonlines
 ```
 
 After uploading, the data can now be queried from the command line. For example, for the `data/iens_sample` table, the 
