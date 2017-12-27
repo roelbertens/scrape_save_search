@@ -84,21 +84,21 @@ class IensSpider(scrapy.Spider):
                 # annoying cases wherein there is no distinction lead to error for .strip() - 'or' is ugly fix
                 'distinction': (response.xpath('//div[@class="reviewSummary-distinction"]/text()').
                                 extract_first() or '').strip(),
-                'rating_total': parse_digit(response.xpath('descendant::*[@class="rating-ratingValue"]/text()').extract_first()),
-                'nr_reviews': nr_reviews,
+                'rating': parse_digit(response.xpath('descendant::*[@class="rating-ratingValue"]/text()').extract_first()),
+                'nr_ratings': nr_reviews,
                 'nr_10ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '10')),
                 'nr_9ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '9')),
                 'nr_8ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '8')),
                 'nr_7ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '7')),
                 'nr_7min_ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '< 7')),
 
-                'rating_eten': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Eten')),
+                'rating_food': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Eten')),
                 'rating_service': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Service')),
                 'rating_decor': parse_digit(get_review_stat(response, 'span', 'avgRatingLabel', 'Decor')),
 
-                'prijs_kwaliteit': get_review_stat(response, 'div', 'reviewStatLabel', 'Prijs-kwaliteit'),
-                'geluidsniveau': get_review_stat(response, 'div', 'reviewStatLabel', 'Geluidsniveau'),
-                'wachttijd': get_review_stat(response, 'div', 'reviewStatLabel', 'Wachttijd')
+                'price_quality': get_review_stat(response, 'div', 'reviewStatLabel', 'Prijs-kwaliteit'),
+                'noise_level': get_review_stat(response, 'div', 'reviewStatLabel', 'Geluidsniveau'),
+                'waiting_time': get_review_stat(response, 'div', 'reviewStatLabel', 'Wachttijd')
             }
         }
 

@@ -54,7 +54,7 @@
         "type": "string"
       },
       {
-        "name": "geluidsniveau",
+        "name": "noise_level",
         "type": "string"
       },
       {
@@ -78,11 +78,11 @@
         "type": "integer"
       },
       {
-        "name": "nr_reviews",
+        "name": "nr_ratings",
         "type": "integer"
       },
       {
-        "name": "prijs_kwaliteit",
+        "name": "price_quality",
         "type": "string"
       },
       {
@@ -90,7 +90,7 @@
         "type": "float"
       },
       {
-        "name": "rating_eten",
+        "name": "rating_food",
         "type": "float"
       },
       {
@@ -98,11 +98,11 @@
         "type": "float"
       },
       {
-        "name": "rating_total",
+        "name": "rating",
         "type": "float"
       },
       {
-        "name": "wachttijd",
+        "name": "waiting_time",
         "type": "string"
       }
     ]
