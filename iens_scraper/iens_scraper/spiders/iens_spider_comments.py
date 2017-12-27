@@ -100,7 +100,14 @@ class IensSpider(scrapy.Spider):
             reviewer = get_reviewer(comment_block.extract()).strip()
             rating = float(get_rating(comment_block.extract()).replace(',', '.'))
             yield {'id': restaurant_id, 'name': restaurant_name, 'comment': comment,
-                   'reviewer': reviewer, 'date': date, 'certified': certified, 'rating': rating}
+                   'reviewer': reviewer, 'date': date, 'reserved_online': certified, 'rating': rating,
+                   'rating_food': int(comment_block.xpath('descendant::span[contains(text(), "Eten")]/' +
+                                                          'following::*/@data-score').extract_first()),
+                   'rating_service': int(comment_block.xpath('descendant::span[contains(text(), "Service")]/' +
+                                                             'following::*/@data-score').extract_first()),
+                   'rating_decor': int(comment_block.xpath('descendant::span[contains(text(), "Decor")]/' +
+                                                           'following::*/@data-score').extract_first())
+            }
 
         # loop over all review data-page-numbers
         for link in response.xpath('//ul[@class="pagination oneline text_right"]/li/a'):
