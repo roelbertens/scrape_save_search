@@ -5,6 +5,9 @@ FROM google/cloud-sdk:latest
 # get argument city to scrape, defaults to Amsterdam
 ARG city=amsterdam
 ENV CITY=${city}
+# get argument whether to scrape comments, defaults to false
+ARG comments=false
+ENV SCRAPE_COMMENTS=${comments}
 
 # install packages (jq for retrieving service account email from json)
 RUN apt-get update && apt-get install -y \
@@ -18,7 +21,7 @@ WORKDIR /app
 ADD iens_scraper/ /app
 ADD requirements.txt /app
 ADD entrypoint.sh /app
-ADD data/iens_schema.json /app
+ADD data/*_schema.json /app
 
 # Maybe save google-credentials to a certificates folder isntead of /app?
 ADD google-credentials/ /app
