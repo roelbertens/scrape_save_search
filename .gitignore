@@ -4,6 +4,7 @@ venv-iens/
 output/
 .ipynb_checkpoints/
 google-credentials/gsdk-credentials.json
+google-credentials/gc-API-key.txt.json
 .DS_Store
 archive/
 *.pptx
