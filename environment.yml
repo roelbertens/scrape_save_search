@@ -9,5 +9,6 @@ dependencies:
 - jupyter=1.0.0
 - pandas=0.21.0
 - pandas-gbq=0.2.1
+- matplotlib
 - pip:
   - jsonlines=1.2.0
