@@ -33,14 +33,16 @@ class IensSpider(scrapy.Spider):
     # get info from restaurant page
     def parse_restaurant(self, response):
         avg_price = -1
-        avg_price_text = response.xpath('//div[contains(concat(" ", normalize-space(@class), " "), "restaurantSummary-price")]/text()').extract_first()
+        avg_price_text = response.xpath('//div[contains(concat(" ", normalize-space(@class), " "), ' +
+                                        '"restaurantSummary-price")]/text()').extract_first()
         if avg_price_text is not None:
             avg_price_numbers = re.findall(r'\d+', avg_price_text)
             if avg_price_numbers:
                avg_price = int(avg_price_numbers[-1])
 
         nr_reviews = -1
-        nr_reviews_text = response.xpath('descendant::*[contains(concat(" ", normalize-space(@class), " "), "reviewsCount")]/text()').extract_first()
+        nr_reviews_text = response.xpath('descendant::*[contains(concat(" ", normalize-space(@class), " "), ' +
+                                         '"reviewsCount")]/text()').extract_first()
         if nr_reviews_text is not None:
             nr_reviews_numbers = re.findall(r'\d+', nr_reviews_text)
             if nr_reviews_numbers:
@@ -84,7 +86,8 @@ class IensSpider(scrapy.Spider):
                 # annoying cases wherein there is no distinction lead to error for .strip() - 'or' is ugly fix
                 'distinction': (response.xpath('//div[@class="reviewSummary-distinction"]/text()').
                                 extract_first() or '').strip(),
-                'rating': parse_digit(response.xpath('descendant::*[@class="rating-ratingValue"]/text()').extract_first()),
+                'rating': parse_digit(response.xpath('//div[@class="rating rating--big"]/' +
+                                                     'span[@class="rating-ratingValue"]/text()').extract_first()),
                 'nr_ratings': nr_reviews,
                 'nr_10ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '10')),
                 'nr_9ratings': parse_digit(get_review_stat(response, 'span', 'rangeLabel', '9')),
