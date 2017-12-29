@@ -20,3 +20,4 @@ dependencies:
   - google-cloud-core==0.28.0
   - google-resumable-media==0.3.1
   - googleapis-common-protos==1.5.3
+  - langdetect==1.0.7
