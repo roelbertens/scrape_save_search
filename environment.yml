@@ -10,6 +10,7 @@ dependencies:
 - pandas=0.21.0
 - pandas-gbq=0.2.1
 - jsonlines=1.2.0
+- matplotlib
 - pip:
   - google-api-core==0.1.3
   - google-auth==1.2.1
