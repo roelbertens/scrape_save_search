@@ -42,6 +42,14 @@
       {
         "name": "street",
         "type": "string"
+      },
+      {
+        "name": "nr_tags",
+        "type": "integer"
+      },
+      {
+        "name": "nr_images",
+        "type": "integer"
       }
     ]
   },
@@ -109,6 +117,11 @@
   },
   {
     "name": "tags",
+    "type": "string",
+    "mode": "repeated"
+  },
+  {
+    "name": "image_urls",
     "type": "string",
     "mode": "repeated"
   }

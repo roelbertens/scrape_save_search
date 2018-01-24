@@ -1,10 +1,12 @@
 # in terminal call as follows to save results in jsonlines file:
 # $ scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
 
-import scrapy
 import re
 
-#parse int or float (when it contains a ',', '.')
+import scrapy
+
+
+# parse int or float (when it contains a ',', '.')
 def parse_digit(text):
     if text is not None:
         if text.find(',') != -1:
@@ -16,29 +18,32 @@ def parse_digit(text):
     else:
         return -1
 
- # function to get review summary statistic for a specific label ("Eten", "Decor", ..., "< 7")
+
+# function to get review summary statistic for a specific label ("Eten", "Decor", ..., "< 7")
 def get_review_stat(response, tag, review_summary_type, label):
     # lookup tag with rating label in the text of the element, then look up following nodes and get text from them
     return response.xpath('//' + tag + '[@class="reviewSummary-' + review_summary_type + '"][contains(text(),"' +
                           label + '")]/following::*/text()').extract_first()
 
+
 # scrape all restaurants given a listings page
 class IensSpider(scrapy.Spider):
     name = "iens"
 
-    def start_requests(self):
-        yield scrapy.Request('https://www.iens.nl/restaurant+%s' % self.placename)
-
+    def __init__(self, placename='amsterdam', *args, **kwargs):
+        super(IensSpider, self).__init__(*args, **kwargs)
+        self.start_urls = ['https://www.iens.nl/restaurant+%s' % placename]
 
     # get info from restaurant page
-    def parse_restaurant(self, response):
+    @staticmethod
+    def parse_restaurant(response):
         avg_price = -1
         avg_price_text = response.xpath('//div[contains(concat(" ", normalize-space(@class), " "), ' +
                                         '"restaurantSummary-price")]/text()').extract_first()
         if avg_price_text is not None:
             avg_price_numbers = re.findall(r'\d+', avg_price_text)
             if avg_price_numbers:
-               avg_price = int(avg_price_numbers[-1])
+                avg_price = int(avg_price_numbers[-1])
 
         nr_reviews = -1
         nr_reviews_text = response.xpath('descendant::*[contains(concat(" ", normalize-space(@class), " "), ' +
@@ -46,10 +51,10 @@ class IensSpider(scrapy.Spider):
         if nr_reviews_text is not None:
             nr_reviews_numbers = re.findall(r'\d+', nr_reviews_text)
             if nr_reviews_numbers:
-               nr_reviews = int(nr_reviews_numbers[0])
+                nr_reviews = int(nr_reviews_numbers[0])
 
         street = -1
-        house_number= -1
+        house_number = -1
         postal_code = -1
         city = -1
         country = -1
@@ -61,6 +66,12 @@ class IensSpider(scrapy.Spider):
             postal_code = address[2]
             city = address[3]
             country = address[4]
+
+        # get active image and lazy images (not displayed at time of visit)
+        image_urls = response.xpath('//div[@class="carousel"]/ul/li/img/@src').extract() + \
+                     response.xpath('//div[@class="carousel"]/ul/li/img/@data-lazy').extract()
+        # don't select the last tag as it is always "..."
+        tags = response.xpath('//ul[@id="restaurantTagContainer"]/descendant::*/text()').extract()[0:-1]
 
         yield {
             # restaurant info data
@@ -75,11 +86,10 @@ class IensSpider(scrapy.Spider):
                 'postal_code': postal_code,
                 'city': city,
                 'country': country,
-                'avg_price': avg_price
+                'avg_price': avg_price,
+                'nr_tags': len(tags),
+                'nr_images': len(image_urls)
             },
-
-            # tag data in list format. don't select the last one as it is always "..."
-            'tags': response.xpath('//ul[@id="restaurantTagContainer"]/descendant::*/text()').extract()[0:-1],
 
             # collect review data
             'reviews': {
@@ -102,7 +112,11 @@ class IensSpider(scrapy.Spider):
                 'price_quality': get_review_stat(response, 'div', 'reviewStatLabel', 'Prijs-kwaliteit'),
                 'noise_level': get_review_stat(response, 'div', 'reviewStatLabel', 'Geluidsniveau'),
                 'waiting_time': get_review_stat(response, 'div', 'reviewStatLabel', 'Wachttijd')
-            }
+            },
+
+            # tag data and image_urls in list format.
+            'tags': tags,
+            'image_urls': image_urls
         }
 
     # get all restaurant links from all listings pages
@@ -112,9 +126,6 @@ class IensSpider(scrapy.Spider):
         for link in response.xpath('//li[@class="resultItem"]/div/h3/a'):
             yield response.follow(link, callback=self.parse_restaurant)
 
-
         # Loop over all listings. response.follow uses href attribute to automatically follow url of <a> tags
         for a in response.xpath('//div[@class="pagination"]/ul/li[@class="next"]/a'):
             yield response.follow(a, callback=self.parse)
-
-
