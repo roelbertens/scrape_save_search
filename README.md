@@ -29,7 +29,7 @@ upload the output to BigQuery.
 1. Create a service account on Google Cloud and save the private key at `google-credentials\gsdk-credentials.json`
 2. From the project directory build the Docker image with:
     ```bash
-    docker build --build-arg city=<value> -t iens_scraper .
+    docker build --build-arg city=<value> --build-arg comments=<true/false> -t iens_scraper .
     ```
 3. Run the container that scrapes and saves the output for you in BigQuery. The volume mount is
     optionally and comes in handy if you want the data and logs to be stored locally as well. 
