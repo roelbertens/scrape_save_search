@@ -5,7 +5,6 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 ## To-do
 
 * Remove bugs in parsing some restaurants with really sparse address information. See errors in `output/scrapy_errors_20170811`
-* Scraping comments: include dates, grades, number of reviews, name of reviewer
 * Create 1 DAG in Airflow to schedule: 1) the scraper, and 2) writing the output to bigquery (dependent on step 1)
 * Setup Terraform script to provision the Google Cloud environment that is needed (more robust than clicking in web UI)
 * Write log files somewhere to google cloud? otherwise get lost
@@ -32,14 +31,14 @@ upload the output to BigQuery.
     docker build --build-arg city=<value> --build-arg comments=<true/false> -t iens_scraper .
     ```
 3. Run the container that scrapes and saves the output for you in BigQuery. The volume mount is
-    optionally and comes in handy if you want the data and logs to be stored locally as well. 
+    optional and comes in handy if you want the data and logs to be stored locally as well. 
     ```bash
     docker run --name iens_container -v /tmp:/app/dockeroutput iens_scraper
     ``` 
 
 ## Architecture
 
-Below picture gives a high level impression of the setup: running a Python Scrapy webcrawler from a container 
+The picture below gives a high level impression of the setup: running a Python Scrapy web crawler from a container 
 that outputs JSON, which is then uploaded to BigQuery for storage and analysis. The container can be run locally
 or, optionally, in the cloud with Google's Container Engine.
 
@@ -52,6 +51,7 @@ In this section we describe in detail how to get each of the individual componen
 ### Set-up a local test environment
 
 To set-up a local virtual environment for testing scrapy, we use [Conda](https://conda.io/docs/):
+
 ```bash
 conda env create -f environment.yml
 ```
@@ -59,8 +59,7 @@ conda env create -f environment.yml
 ### Scrapy
 
 [Scrapy](https://scrapy.org) is a Python web crawling framework which works with so called spiders. 
-Use below code to call the spider named `iens` from the `iens_scraper` folder, and/or the `iens_comments` spider that
-gets all reviews of restaurants in Amsterdam:
+Use the code below to call the spider named `iens` from the `iens_scraper` folder, and/or the `iens_comments` spider. The former gathers information about the restaurant and the latter gathers the all corresponding reviews/comments:
 
 ```bash
 scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
@@ -68,30 +67,33 @@ scrapy crawl iens_comments -a placename=amsterdam -o output/iens_comments.jsonli
 ```
 
 Within these calls the following arguments can be set:
-* `-a` adds an argument for `placename` to indicate which city the restaurants need to be scraped for. 
-The argument is passed on to the spider class.
-* `-o` for the location of the output file. Use file extention `.jsonlines` instead of `.json` for Google BigQuery 
-input. More on this in the Google Cloud section.
-* `-s LOG_FILE` to save scrapy log to file for error checking.
-* In `Settings.py` set `LOG_LEVEL = 'WARNING'` to only print error messages of level warning or higher.
+
+* `-a` adds an argument for `placename` to indicate for which city we want to scrape data. This argument is passed on to the spider class.
+* `-o` for the location of the output file. Use file extension `.jsonlines` instead of `.json` so we can use it later as input for Google BigQuery. More on this in the Google Cloud section.
+* `-s LOG_FILE` to save the scrapy log information to file for error checking.
+In `Settings.py` set `LOG_LEVEL = 'WARNING'` to only print error messages of level warning or higher.
 
 ### Docker
 
 Note: Docker is actually an overkill for what we intent to do. A simple virtual environment with a script scheduler 
-would be sufficient for this purpose. The reason that we use Docker is pure for learning the tool.
+would be sufficient for this purpose. We only use Docker because we can.
 
-To set-up the container, navigate to project folder and build the image with. Replace `<value>` with the city name that
-you want to scrape data for. For testing purposes choose a small town with few restaurants like Diemen...
+To set-up the container, navigate to the project folder and build the image with:
+
 ```bash
 docker build --build-arg city=<value> -t iens_scraper .
 ```
+
+Replace `<value>` with the name of the city that you want to scrape data for. For testing purposes choose a small town with few restaurants like Diemen.
+
+#### Notes
 * About building this particular image:
     - This command builds a Docker image based on the Dockerfile. Here we make use of the  
     [Google Cloud SDK base image](https://hub.docker.com/r/google/cloud-sdk/) so that we have the BigQuery command line
     commands available in the container. 
     - One could also use a Python base image and install the gc-sdk on it, but it's a bit less trivial how to do that. 
     However, it would be better as you would be able to install only the tools required for BigQuery and thus keep the 
-    size of the image contained. We did find that the Python 3.6.1-slim base image won't work. It misses certain 
+    size of the image as small as possible. We did find that the Python 3.6.1-slim base image won't work. It misses certain 
     packages to set up Scrapy.
 * About Dockerfiles:
     - RUN vs. CMD: RUN commands are executed when building the image. CMD commands when running a container based on 
@@ -104,16 +106,20 @@ docker build --build-arg city=<value> -t iens_scraper .
         - In that case there is no need to use CMD, set it to for example `CMD["--help"]`.
         - Make sure to set the permissions of `entrypoint.sh` to executable with `chmod`.
 
+
 To spin up a container named `iens_container` after you have created the image `iens_scraper` do:
+
 ```bash
 docker run --name iens_container -v /tmp:/app/dockeroutput iens_scraper
 ```
+
 Within this command `-v` does a volume mount to the local `/tmp` folder to store the data. Note that we don't call the 
 volume mount within the script as the path is system-dependent and thus isn't known in advance.
 
 If you want to remove the container directly after running, add the option `-rm`.
 
 When testing whether you have set up your image correctly, it can be handy to bash into a container:
+
 * Uncomment `ENTRYPOINT ["./entrypoint.sh"]` in the Dockerfile as otherwise this will run before you can 
     bash into the container. And build a new image that you give some obvious test name.
 * Then just add `-it` and `bash` to the run command: `docker run -it --name iens_container iens_scraper bash`.
@@ -138,7 +144,7 @@ created service account. For writing to BigQuery we need permission *bigquery.ta
 assigning the role *BigQuery Data Editor* or higher.
 
 Your private key saved in `google-credentials\gsdk-credentials.json` is copied into the container when building the 
-Docker image. When running a container, the key is then used to authenticate to Google Cloud.
+Docker image. When running a container the key is used for authentication with Google Cloud.
 
 ### Google BigQuery
 
@@ -161,6 +167,7 @@ When the JSON structure is more complicated (like for the restaurant information
  as output file extension from your scraper. Check out the schema for the restaurant data in the `data` folder. 
 
 To upload data to BigQuery do:
+
 ```bash
 bq load --source_format=NEWLINE_DELIMITED_JSON --schema=data/iens_schema.json iens.iens_sample data/iens_sample.jsonlines
 bq load --autodetect --source_format=NEWLINE_DELIMITED_JSON iens.iens_comments data/iens_comments.jsonlines
@@ -183,6 +190,7 @@ Follow the following [tutorial](https://cloud.google.com/container-registry/docs
 on how to push and pull to the Google Container Registry.
 
 To tag and push your existing image to the Container Registry do:
+
 ```bash
 docker tag iens_scraper eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
 gcloud docker -- push eu.gcr.io/${PROJECT_ID}/iens_scraper
@@ -198,17 +206,27 @@ more tightly-coupled containers. The Pod is the smallest deployable unit in Kube
 We can obtain such a cluster easily with the Google Container Engine. Follow 
 [this tutorial](https://cloud.google.com/container-engine/docs/tutorials/hello-app)
 and spin up a cluster from the command line with:
+
 ```bash
 gcloud container clusters create iens-cluster --num-nodes=1
 ```
+
 By default Google deploys machines with 1 core and 3.75GB.
 
-To deploy your application, run the below command. Check that it is running with `kubectl get pods` afterwards.
+To deploy your application, run the command below. 
+
 ```bash
 kubectl run iens-deploy --image=eu.gcr.io/${PROJECT_ID}/iens_scraper:v1
 ```
-Congrats! You now have a machine in the cloud that is scraping Ines for you!
 
-Do note: it doesn't make a lot of sense to do this as the scraping is currently a one time thing. This means
-the cluster stays alive even after the scraping is done, which will unnecessarily cost you money. It does make
-sense when we would want to schedule an iterative task (with Airflow or Cron), like scraping each hour.
+Afterwards, check that it is running with:
+
+```bash
+kubectl get pods
+```
+
+
+Congrats! You now have a machine in the cloud that is scraping Iens for you!
+
+Do note: currently our approach doesn't make a lot of sense as the scraping is a one time thing. This means the cluster stays alive even after the scraping is done, which will unnecessarily cost you money. It does make
+sense when we would want to schedule an iterative task (with Airflow or Cron), like scraping each hour. Luckily, making sense was not our goal.
