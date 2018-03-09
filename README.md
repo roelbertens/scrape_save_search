@@ -73,6 +73,9 @@ Within these calls the following arguments can be set:
 * `-s LOG_FILE` to save the scrapy log information to file for error checking.
 In `Settings.py` set `LOG_LEVEL = 'WARNING'` to only print error messages of level warning or higher.
 
+If the scraper doesn't do anything, check if it is possibly blocked by fetching just the first page with `scrapy fetch`.
+If so, change the scrapy `USER_AGENT` in `settings.py` to some browser default that isn't blocked.
+
 ### Docker
 
 Note: Docker is actually an overkill for what we intent to do. A simple virtual environment with a script scheduler 
