@@ -1,10 +1,9 @@
-# Iens scraper
+# Scrape Save Search
 
 The goal of this project is to learn how to run a Python Scrapy script from Docker on Google Cloud.
 
 ## To-do
 
-* Remove bugs in parsing some restaurants with really sparse address information. See errors in `output/scrapy_errors_20170811`
 * Create 1 DAG in Airflow to schedule: 1) the scraper, and 2) writing the output to bigquery (dependent on step 1)
 * Setup Terraform script to provision the Google Cloud environment that is needed (more robust than clicking in web UI)
 * Write log files somewhere to google cloud? otherwise get lost
@@ -13,17 +12,16 @@ The goal of this project is to learn how to run a Python Scrapy script from Dock
 
 * In the main project folder we have all setup files (like Dockerfile, entrypoint.sh and requirements.txt)
 * In the directory `data` there are some sample data sets, and the json schema required to upload to Google BigQuery
-* The directory `iens_scraper` contains:
-    * the `spider` folder set up by Scrapy with 2 crawlers
-		* `iens_spider.py` (scrapes all info about the restaurant excl. comments)
-		* `iens_spider_comments.py` (scrapes restaurant id, name and comments)
+* The directory `scraper` contains:
+    * the `spiders` folder set up by Scrapy with 2 crawlers
+		* `restaurant_spider.py` (scrapes all info about the restaurant excl. comments)
+		* `comments_spider.py` (scrapes restaurant id, name and comments)
     * Other required code (nothing necessary yet)
 * Your private google service account credentials should be saved in folder `google-credentials`.
 
 ## To run
 
-With the code in this repository, there's only 3 steps required for you to scrape [Iens](https://www.iens.nl/) and 
-upload the output to BigQuery.
+With the code in this repository, there's only 3 steps required for you to scrape restaurant info and upload the output to BigQuery.
 
 1. Create a service account on Google Cloud and save the private key at `google-credentials\gsdk-credentials.json`
 2. From the project directory build the Docker image with:
@@ -59,11 +57,11 @@ conda env create -f environment.yml
 ### Scrapy
 
 [Scrapy](https://scrapy.org) is a Python web crawling framework which works with so called spiders. 
-Use the code below to call the spider named `iens` from the `iens_scraper` folder, and/or the `iens_comments` spider. The former gathers information about the restaurant and the latter gathers the all corresponding reviews/comments:
+Use the code below to call the spiders from the `scraper` folder. One gathers information about the restaurant and the other gathers all corresponding reviews/comments:
 
 ```bash
-scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
-scrapy crawl iens_comments -a placename=amsterdam -o output/iens_comments.jsonlines -s LOG_FILE=output/scrapy_comments.log
+scrapy crawl restaurant_spider -a placename=amsterdam -o output/restaurant_spider.jsonlines -s LOG_FILE=output/scrapy.log
+scrapy crawl comments_spider -a placename=amsterdam -o output/comments_spider.jsonlines -s LOG_FILE=output/scrapy_comments.log
 ```
 
 Within these calls the following arguments can be set:
@@ -229,7 +227,7 @@ kubectl get pods
 ```
 
 
-Congrats! You now have a machine in the cloud that is scraping Iens for you!
+Congrats! You now have a machine in the cloud that is scraping restaurant information for you!
 
 Do note: currently our approach doesn't make a lot of sense as the scraping is a one time thing. This means the cluster stays alive even after the scraping is done, which will unnecessarily cost you money. It does make
 sense when we would want to schedule an iterative task (with Airflow or Cron), like scraping each hour. Luckily, making sense was not our goal.

@@ -1,8 +1,9 @@
-# in terminal call as follows to save results in jsonlines file:
-# $ scrapy crawl iens -a placename=amsterdam -o output/iens.jsonlines -s LOG_FILE=output/scrapy.log
+'''
+In terminal call as follows to save results in jsonlines file:
+$ scrapy crawl restaurant_spider -a placename=amsterdam -o output/restaurant_spider.jsonlines -s LOG_FILE=output/scrapy.log
+'''
 
 import re
-
 import scrapy
 
 
@@ -27,11 +28,11 @@ def get_review_stat(response, tag, review_summary_type, label):
 
 
 # scrape all restaurants given a listings page
-class IensSpider(scrapy.Spider):
-    name = "iens"
+class RestaurantSpider(scrapy.Spider):
+    name = "restaurant_spider"
 
     def __init__(self, placename='amsterdam', *args, **kwargs):
-        super(IensSpider, self).__init__(*args, **kwargs)
+        super(RestaurantSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://www.iens.nl/restaurant+%s' % placename]
 
     # get info from restaurant page

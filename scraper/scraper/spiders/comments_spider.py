@@ -1,5 +1,7 @@
-# in terminal call as follows to save results in json file:
-# $ scrapy crawl iens_comments -a placename=amsterdam -o output/iens_comments.jsonlines -s LOG_FILE=output/scrapy_comments.log
+'''
+In terminal call as follows to save results in jsonlines file:
+$ scrapy crawl comments_spider -a placename=amsterdam -o output/comments_spider.jsonlines -s LOG_FILE=output/scrapy_comments.log
+'''
 
 import scrapy
 import re
@@ -7,6 +9,7 @@ import jsonlines
 import datetime as dt
 import re
 import json
+
 
 months = {
     'jan': '1',
@@ -39,10 +42,10 @@ def get_reviewer(xml):
 
 
 def parse_date(date_string):
-    date_string = date_string[date_string.find('Datum van je bezoek: ')+21:].strip()
-    pattern = re.compile(r'\b(' + '|'.join(months.keys()) + r')\b')
-    date_string = pattern.sub(lambda x: months[x.group()], date_string)
-    return dt.datetime.strptime(date_string.replace('.',''), '%d %m %Y').strftime('%Y-%m-%d')
+  date_string = date_string[date_string.find('Datum van je bezoek: ')+21:].strip()
+  pattern = re.compile(r'\b(' + '|'.join(months.keys()) + r')\b')
+  date_string = pattern.sub(lambda x: months[x.group()], date_string)
+  return dt.datetime.strptime(date_string.replace('.',''), '%d %m %Y').strftime('%Y-%m-%d')
 
 
 def get_date(xml):
@@ -71,16 +74,18 @@ def get_nr_of_pages(xml):
   return xml[start:start+end]
 
 
- # function to get review text based on an xpath expression
- #  /text() gets text of specific tag
- # //text() gets text of specific tag and of its children
 def get_contents(response, tag, review_item_type):
-    return response.xpath('//' + tag + '[@class="reviewItem-' + review_item_type + '"]/text()').extract()
+  '''
+  Function to get review text based on an xpath expression
+  /text() gets text of specific tag
+  //text() gets text of specific tag and of its children
+  '''
+  return response.xpath('//' + tag + '[@class="reviewItem-' + review_item_type + '"]/text()').extract()
 
 
 # scrape all restaurants given a listings page
-class IensSpider(scrapy.Spider):
-    name = "iens_comments"
+class CommentsSpider(scrapy.Spider):
+    name = "comments_spider"
 
     def start_requests(self):
         yield scrapy.Request('https://www.iens.nl/restaurant+%s' % self.placename)
